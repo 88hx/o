@@ -1,46 +1,4 @@
-<?php
-// 调试用：记录TVBox的真实UA（测试完成后可删除）
-file_put_contents('ua.log', $_SERVER['HTTP_USER_AGENT'] . ' | ' . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
-
-// 获取请求的用户代理（UA）
-$ua = $_SERVER['HTTP_USER_AGENT'];
-// 匹配TVBox相关的UA关键词（覆盖主流改版）
-$tvboxKeywords = [
-    "TVBox", "tvbox", "OKHTTP", "okhttp", 
-    "Player", "影视仓", "喵影视", "FongMi",
-    "MiaoBo", "XiaoHe", "Box", "TVPlayer"
-];
-$isTvbox = false;
-
-// 判断是否为TVBox请求
-foreach ($tvboxKeywords as $keyword) {
-    if (stripos($ua, $keyword) !== false) {
-        $isTvbox = true;
-        break;
-    }
-}
-
-// TVBox请求：返回tvbox.json配置内容
-if ($isTvbox) {
-    $configFile = __DIR__ . '/tvbox.json'; // 绝对路径避免找不到文件
-    header("Content-Type: application/json; charset=utf-8");
-    
-    // 检查配置文件是否存在
-    if (file_exists($configFile)) {
-        readfile($configFile);
-    } else {
-        // 返回友好的错误提示
-        echo json_encode([
-            "code" => 404,
-            "msg" => "配置文件不存在，请检查tvbox.json是否上传",
-            "time" => date('Y-m-d H:i:s')
-        ], JSON_UNESCAPED_UNICODE);
-    }
-    exit;
-}
-
-// 浏览器请求：显示备忘录网页
-?>
+</script>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
