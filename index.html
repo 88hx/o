@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>综合编码解密工具 Base64 Gzip HEX AES</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Microsoft YaHei}
+body{padding:20px;background:#f5f7fa;max-width:1280px;margin:0 auto}
+.card{background:#fff;padding:18px;border-radius:10px;margin-bottom:20px;box-shadow:0 1px 8px #e2e6ef}
+h3{margin-bottom:12px;color:#1f2937;font-size:17px}
+textarea{width:100%;height:150px;padding:10px;border:1px solid #d1d5db;border-radius:6px;margin:8px 0;resize:vertical}
+input{width:100%;padding:9px;border:1px solid #d1d5db;border-radius:6px;margin:7px 0}
+.btns{display:flex;gap:12px;margin:12px 0;flex-wrap:wrap}
+button{padding:9px 18px;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;transition:all 0.2s ease;}
+button:hover{transform:scale(1.05);box-shadow:0 2px 10px rgba(0,0,0,0.15)}
+.btn-b64{background:#059669}
+.btn-gzip{background:#2563eb}
+.btn-hex{background:#9333ea}
+.btn-aes{background:#e64398}
+.btn-copy{background:#0284c7}
+.btn-clear{background:#6b7280}
+.btn-link{background:#16a34a}
+.tip{color:#666;font-size:13px;margin:6px 0}
+hr{border:0;border-top:1px solid #eee;margin:16px 0}
+.aes-row{display:flex;gap:16px;margin:8px 0}
+.aes-col{flex:1}
+.url-box{background:#f3f4f6;padding:10px;border-radius:6px;margin:8px 0;color:#111827;word-break:break-all}
+
+.main-title{
+    text-align:center;
+    font-size:42px;
+    font-weight:900;
+    padding:16px 0;
+    letter-spacing:4px;
+    /* 文字渐变核心 */
+    background: linear-gradient(90deg,#ff4757,#ffa502,#2ed573,#1e90ff,#a55eea);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
+    text-shadow:0 0 12px rgba(100,160,255,0.25);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.main-title:hover{
+    transform: scale(1.03);
+    filter: brightness(1.1);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+<div class="card">
+    
+    <div class="main-title" onclick="window.open('https://www.xn--sss604efuw.net/jm/')">自用解码工具【飞 哥】</div>
+</div>
+<hr>
+<div class="card">
+<h3>1. Base64 编解码</h3>
+<input type="file" id="b64FileInput" accept=".txt">
+<div class="btns">
+<button class="btn-b64" onclick="readTxtFileToBox()">读取TXT</button>
+<button class="btn-b64" onclick="txtToB64()">文本转Base64</button>
+<button class="btn-b64" onclick="b64ToTxt()">Base64解码</button>
+<button class="btn-b64" onclick="saveBoxToTxt()">导出TXT</button>
+<button class="btn-copy" onclick="copyText('b64Txt')">复制全文</button>
+<button class="btn-clear" onclick="document.getElementById('b64Txt').value=''">清空</button>
+</div>
+<textarea id="b64Txt" placeholder="输入"></textarea>
+</div>
+<div class="card">
+<h3>2. Gzip-Base64 压缩解压</h3>
+<input type="file" id="gzipFileInput" accept=".txt">
+<div class="btns">
+<button class="btn-gzip" onclick="readGzipTxt()">读取TXT</button>
+<button class="btn-gzip" onclick="txtGzipB64()">明文→GzipBase64</button>
+<button class="btn-gzip" onclick="gzipB64Txt()">GzipBase64→明文</button>
+<button class="btn-gzip" onclick="saveGzipTxt()">导出TXT</button>
+<button class="btn-copy" onclick="copyText('gzipTxt')">复制全文</button>
+<button class="btn-clear" onclick="document.getElementById('gzipTxt').value=''">清空</button>
+</div>
+<textarea id="gzipTxt" placeholder="输入"></textarea>
+<div class="tip">需联网加载pako库</div>
+</div>
+<div class="card">
+<h3>4. TVBox AES-128-CBC 专用加解密</h3>
+<input type="file" id="aesFileInput" accept=".txt">
+<div class="aes-row">
+    <div class="aes-col">
+        <label>密钥KEY</label>
+        <input id="aesKey" maxlength="16" placeholder="不足16位自动补0" value="123456">
+    </div>
+    <div class="aes-col">
+        <label>IV向量</label>
+        <input id="aesIv" disabled placeholder="加密自动生成">
+    </div>
+    <div class="aes-col">
+        <label>模式</label>
+        <select id="aesMode" style="width:100%;padding:9px;border-radius:6px;border:1px solid #d1d5db;">
+            <option value="encrypt">加密</option>
+            <option value="decrypt">解密</option>
+        </select>
+    </div>
+</div>
+<div class="btns">
+<button class="btn-aes" onclick="readAesTxt()">读取TXT</button>
+<button class="btn-aes" onclick="runAes()">执行加解密</button>
+<button class="btn-aes" onclick="saveAesTxt()">导出TXT</button>
+<button class="btn-copy" onclick="copyText('aesTxt')">复制全文</button>
+<button class="btn-clear" onclick="document.getElementById('aesTxt').value=''">清空</button>
+</div>
+<textarea id="aesTxt" placeholder="输入"></textarea>
+<div class="tip">加密输出格式：$#key#$十六进制密文+时间戳Hex</div>
+</div>
+<script>
+// 通用复制文本函数（兼容手机新旧浏览器）
+async function copyText(textareaId) {
+    const el = document.getElementById(textareaId);
+    const text = el.value.trim();
+    if (!text) {
+        alert("文本框内容为空，无法复制");
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(text);
+        alert("复制成功！");
+    } catch (e) {
+        el.select();
+        document.execCommand("copy");
+        alert("复制成功！");
+    }
+}
+// 通用文件读写
+function readTextFile(fileDomId, textareaId){
+    const file = document.getElementById(fileDomId).files[0];
+    if(!file) return alert('请选择txt文件');
+    const reader = new FileReader();
+    reader.onload = e=>document.getElementById(textareaId).value = e.target.result;
+    reader.readAsText(file);
+}
+function saveTextToFile(textareaId, fileName="output.txt"){
+    const text = document.getElementById(textareaId).value;
+    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+// Base64模块
+function readTxtFileToBox(){readTextFile('b64FileInput','b64Txt')}
+function saveBoxToTxt(){saveTextToFile('b64Txt','base64输出.txt')}
+function txtToB64(){
+    const t = document.getElementById('b64Txt').value;
+    document.getElementById('b64Txt').value = btoa(unescape(encodeURIComponent(t)));
+}
+function b64ToTxt(){
+    const t = document.getElementById('b64Txt').value.trim();
+    document.getElementById('b64Txt').value = decodeURIComponent(escape(atob(t)));
+}
+// Gzip模块
+function readGzipTxt(){readTextFile('gzipFileInput','gzipTxt')}
+function saveGzipTxt(){saveTextToFile('gzipTxt','gzip输出.txt')}
+function txtGzipB64(){
+    if(!window.pako) return alert('请联网加载压缩库');
+    const buf = new TextEncoder().encode(document.getElementById('gzipTxt').value);
+    const zip = pako.gzip(buf);
+    document.getElementById('gzipTxt').value = btoa(String.fromCharCode(...zip));
+}
+function gzipB64Txt(){
+    if(!window.pako) return alert('请联网加载压缩库');
+    const raw = atob(document.getElementById('gzipTxt').value.trim());
+    const arr = Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+    const out = pako.ungzip(arr);
+    document.getElementById('gzipTxt').value = new TextDecoder().decode(out);
+}
+// HEX十六进制模块
+function readHexTxt(){readTextFile('hexFileInput','hexTxt')}
+function saveHexTxt(){saveTextToFile('hexTxt','hex输出.txt')}
+function textToHex(){
+    const text = document.getElementById('hexTxt').value;
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(text);
+    let hexStr = '';
+    for(let b of bytes){
+        hexStr += b.toString(16).padStart(2,'0');
+    }
+    document.getElementById('hexTxt').value = hexStr;
+}
+function hexToText(){
+    let hexRaw = document.getElementById('hexTxt').value.trim();
+    hexRaw = hexRaw.replace(/\s/g,'');
+    if(hexRaw.length % 2 !== 0){
+        alert('十六进制长度必须为偶数');
+        return;
+    }
+    const bytes = [];
+    for(let i=0;i<hexRaw.length;i+=2){
+        const byteVal = parseInt(hexRaw.slice(i,i+2),16);
+        if(isNaN(byteVal)){
+            alert('包含非法十六进制字符');
+            return;
+        }
+        bytes.push(byteVal);
+    }
+    const uint8 = new Uint8Array(bytes);
+    document.getElementById('hexTxt').value = new TextDecoder().decode(uint8);
+}
+// TVBox AES模块
+const aesTxt = document.getElementById('aesTxt');
+const aesKey = document.getElementById('aesKey');
+const aesIv = document.getElementById('aesIv');
+const aesMode = document.getElementById('aesMode');
+function readAesTxt(){readTextFile('aesFileInput','aesTxt')}
+function saveAesTxt(){
+    const name = aesMode.value==='encrypt' ? 'tvbox加密.txt' : 'tvbox解密.txt';
+    saveTextToFile('aesTxt', name);
+}
+function padTo16Byte(str) {
+    return CryptoJS.enc.Utf8.parse(str.toString().padEnd(16, '0'));
+}
+function Encrypt(word, keyStr, ivStr) {
+    const key = padTo16Byte(keyStr);
+    const iv = padTo16Byte(ivStr);
+    const encrypted = CryptoJS.AES.encrypt(word, key, { iv, padding:CryptoJS.pad.Pkcs7 });
+    return encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+}
+function Decrypt(word, keyStr, ivStr) {
+    const key = padTo16Byte(keyStr);
+    const iv = padTo16Byte(ivStr);
+    const ciphertext = CryptoJS.enc.Hex.parse(word);
+    const decrypt = CryptoJS.AES.decrypt({ ciphertext }, key, { iv, padding:CryptoJS.pad.Pkcs7 });
+    return decrypt.toString(CryptoJS.enc.Utf8);
+}
+function decryptAesBCB(encryptedData) {
+    const prefixRaw = "$#";
+    const suffixRaw = "#$";
+    const prefixCode = CryptoJS.enc.Utf8.parse(prefixRaw).toString();
+    const suffixCode = CryptoJS.enc.Utf8.parse(suffixRaw).toString();
+    const dataArr = encryptedData.split("");
+    const suffixFull = suffixCode;
+    const pwdMixEndIdx = encryptedData.indexOf(suffixFull) + suffixFull.length;
+    const pwdMix = dataArr.splice(0, pwdMixEndIdx).join("");
+    const roundtimeHex = dataArr.splice(dataArr.length - 26, 26).join("");
+    const cipherHex = dataArr.join("");
+    const pwdHex = pwdMix.substring(prefixCode.length, pwdMix.length - suffixCode.length);
+    const roundTime = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(roundtimeHex));
+    const realKey = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(pwdHex));
+    const iv = padTo16Byte(roundTime);
+    const pk = padTo16Byte(realKey);
+    const cipherParams = CryptoJS.lib.CipherParams.create({
+        ciphertext: CryptoJS.enc.Hex.parse(cipherHex)
+    });
+    const dec = CryptoJS.AES.decrypt(cipherParams, pk, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    return dec.toString(CryptoJS.enc.Utf8);
+}
+function toHex(str) {
+    return CryptoJS.enc.Hex.stringify(CryptoJS.enc.Utf8.parse(str));
+}
+function runAes(){
+    const text = aesTxt.value.trim();
+    const key = aesKey.value;
+    if(!text){
+        alert("请输入文本或上传文件");
+        return;
+    }
+    if(aesMode.value === 'encrypt'){
+        const timestamp = String(new Date().getTime());
+        aesIv.value = timestamp;
+        const aesHex = Encrypt(text, key, timestamp);
+        const keyWrapHex = toHex(`$#${key}#$`);
+        const ivHex = toHex(timestamp);
+        const fullCipher = keyWrapHex + aesHex + ivHex;
+        aesTxt.value = fullCipher;
+    }else{
+        try{
+            const plain = decryptAesBCB(text);
+            aesTxt.value = plain;
+        }catch(err){
+            alert("解密失败：密钥错误或密文格式不符");
+            console.error(err);
+        }
+    }
+}
+</script>
+</body>
+</html>
